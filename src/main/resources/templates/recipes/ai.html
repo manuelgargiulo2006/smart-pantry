@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ricetta anti-spreco con AI')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <span class="ai-badge"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Intelligenza artificiale</span>
+                    <h1 style="margin-top:.6rem">Ricetta anti-spreco</h1>
+                    <p>Scegli gli ingredienti da consumare: l'AI inventa una ricetta che li usa,
+                        rispettando le allergie e il regime alimentare del tuo profilo.</p>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="grid-main">
+                <!-- Risultato -->
+                <div>
+                    <section class="panel" th:if="${recipe != null}">
+                        <div class="panel-head">
+                            <div>
+                                <h2 th:text="${recipe.nome}">Frittata di zucchine</h2>
+                                <p th:text="${recipe.descrizione}">Descrizione</p>
+                            </div>
+                            <form th:action="@{/recipes/ai/save}" method="post">
+                                <button class="btn" type="submit">
+                                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-book"/></svg> Salva nel ricettario
+                                </button>
+                            </form>
+                        </div>
+                        <div class="chips" style="margin-bottom:1.25rem">
+                            <span class="chip"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-clock"/></svg>
+                                <span th:text="${recipe.tempoPreparazione} + ' minuti'">20 minuti</span></span>
+                            <span class="chip"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-people"/></svg>
+                                <span th:text="${recipe.porzioni} + ' porzioni'">2 porzioni</span></span>
+                            <span class="chip green" th:if="${recipe.regime != null}" th:text="${#strings.capitalize(#strings.toLowerCase(recipe.regime))}">Vegetariana</span>
+                        </div>
+
+                        <div class="grid-2">
+                            <div>
+                                <h3 style="margin-bottom:.5rem">Ingredienti</h3>
+                                <ul class="ingredients">
+                                    <li th:each="ing : ${recipe.ingredienti}">
+                                        <span th:text="${ing.nome}">Zucchine</span>
+                                        <span class="amount" th:text="${ing.quantita}">2</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 style="margin-bottom:.5rem">Da comprare</h3>
+                                <p class="muted small" th:if="${recipe.ingredientiMancanti == null or #lists.isEmpty(recipe.ingredientiMancanti)}">
+                                    Niente: hai già tutto in casa.</p>
+                                <div class="chips" th:unless="${recipe.ingredientiMancanti == null or #lists.isEmpty(recipe.ingredientiMancanti)}">
+                                    <span class="chip orange" th:each="m : ${recipe.ingredientiMancanti}" th:text="${m}">Panna</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 style="margin:1.5rem 0 .9rem">Preparazione</h3>
+                        <ol class="steps">
+                            <li th:each="step : ${recipe.passaggi}" th:text="${step}">Passaggio</li>
+                        </ol>
+
+                        <p class="tip" th:if="${recipe.consiglioAntiSpreco != null and !#strings.isEmpty(recipe.consiglioAntiSpreco)}">
+                            <strong>Consiglio anti-spreco:</strong> <span th:text="${recipe.consiglioAntiSpreco}">Consiglio</span>
+                        </p>
+                    </section>
+
+                    <section class="panel empty" th:if="${recipe == null}">
+                        <svg class="icon" aria-hidden="true" style="width:2.5rem;height:2.5rem;color:var(--apricot-bright)"><use href="/img/icons.svg#i-pot"/></svg>
+                        <h3 style="margin-top:.75rem">La ricetta comparirà qui</h3>
+                        <p>Gli ingredienti in scadenza sono già selezionati. Premi <strong>Genera la ricetta</strong>.</p>
+                    </section>
+                </div>
+
+                <!-- Scelta ingredienti -->
+                <form class="panel ai-form" th:action="@{/recipes/ai}" method="post">
+                    <h2 style="margin-bottom:.4rem">Ingredienti</h2>
+                    <p class="muted small" style="margin-bottom:1rem">La ricetta userà soprattutto questi.</p>
+
+                    <p class="muted small" th:if="${#lists.isEmpty(expiringItems) and #lists.isEmpty(otherItems)}">
+                        La dispensa è vuota: <a th:href="@{/pantry/new}">aggiungi qualche prodotto</a>.
+                    </p>
+
+                    <th:block th:unless="${#lists.isEmpty(expiringItems)}">
+                        <div class="label" style="font-weight:600;margin-bottom:.4rem">In scadenza</div>
+                        <div class="checks" style="margin-bottom:1rem">
+                            <label class="check" th:each="item : ${expiringItems}">
+                                <input type="checkbox" name="ingredients" th:value="${item.product.name}"
+                                       th:checked="${#lists.contains(selected, item.product.name)}">
+                                <span th:text="${item.product.name}">Zucchine</span>
+                                <span class="status-dot expiring" style="margin-left:auto"></span>
+                            </label>
+                        </div>
+                    </th:block>
+
+                    <th:block th:unless="${#lists.isEmpty(otherItems)}">
+                        <div class="label" style="font-weight:600;margin-bottom:.4rem">Altri prodotti in dispensa</div>
+                        <div class="checks">
+                            <label class="check" th:each="item : ${otherItems}">
+                                <input type="checkbox" name="ingredients" th:value="${item.product.name}"
+                                       th:checked="${#lists.contains(selected, item.product.name)}">
+                                <span th:text="${item.product.name}">Patate</span>
+                            </label>
+                        </div>
+                    </th:block>
+
+                    <div class="form-actions">
+                        <button class="btn btn-accent btn-block" type="submit"
+                                th:disabled="${#lists.isEmpty(expiringItems) and #lists.isEmpty(otherItems)}">
+                            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg>
+                            <span th:text="${recipe == null} ? 'Genera la ricetta' : 'Genera un\'altra ricetta'">Genera la ricetta</span>
+                        </button>
+                        <span class="loading-note"><span class="spinner"></span> Lo chef sta pensando, servono pochi secondi...</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

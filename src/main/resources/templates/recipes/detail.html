@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${s.recipe.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <p class="small" style="margin-bottom:.75rem"><a th:href="@{/recipes}">Torna alle ricette</a></p>
+            <div class="page-head">
+                <div>
+                    <div class="chips" style="margin-bottom:.6rem">
+                        <span class="chip green" th:text="${s.recipe.diet.label}">Vegetariana</span>
+                        <span class="chip dark" th:if="${s.recipe.aiGenerated}">Creata con AI</span>
+                    </div>
+                    <h1 th:text="${s.recipe.name}">Frittata di zucchine</h1>
+                    <p th:text="${s.recipe.description}">Descrizione</p>
+                </div>
+                <div class="chips">
+                    <span class="chip"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-clock"/></svg>
+                        <span th:text="${s.recipe.prepMinutes} + ' minuti'">20 minuti</span></span>
+                    <span class="chip"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-people"/></svg>
+                        <span th:text="${s.recipe.servings} + (${s.recipe.servings == 1} ? ' porzione' : ' porzioni')">2 porzioni</span></span>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="flash flash-error" role="alert" th:unless="${s.safe}">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+                <span>Attenzione: questa ricetta contiene
+                    <strong th:each="a, it : ${s.allergens}" th:text="${a.label} + (${it.last} ? '' : ', ')">latte</strong>,
+                    che hai indicato tra le tue allergie.</span>
+            </div>
+
+            <div class="flash flash-info" th:unless="${#lists.isEmpty(s.expiringUsed)}">
+                <svg class="icon" aria-hidden="true" style="color:var(--apricot-bright)"><use href="/img/icons.svg#i-alert"/></svg>
+                <span>Questa ricetta ti fa usare prodotti in scadenza:
+                    <strong th:text="${#strings.listJoin(s.expiringUsed, ', ')}">zucchine</strong>.</span>
+            </div>
+
+            <div class="recipe-detail">
+                <section class="panel">
+                    <h2 style="margin-bottom:.75rem">Ingredienti</h2>
+                    <ul class="ingredients">
+                        <li th:each="ing : ${s.recipe.ingredients}">
+                            <span>
+                                <span th:text="${ing.ingredientName}">Uova</span>
+                                <span class="chip green" th:if="${ing.product != null and #lists.contains(s.available, ing.product.name)}">in casa</span>
+                                <span class="chip orange" th:if="${ing.product != null and #lists.contains(s.missing, ing.product.name)}">da comprare</span>
+                            </span>
+                            <span class="amount" th:text="${ing.amount}">4</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="panel">
+                    <h2 style="margin-bottom:1rem">Preparazione</h2>
+                    <ol class="steps">
+                        <li th:each="step : ${s.recipe.steps}" th:text="${step}">Passaggio</li>
+                    </ol>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

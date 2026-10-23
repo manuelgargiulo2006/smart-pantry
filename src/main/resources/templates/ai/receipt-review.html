@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Controlla lo scontrino')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <span class="ai-badge"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Intelligenza artificiale</span>
+                    <h1 style="margin-top:.6rem">Controlla i prodotti trovati</h1>
+                    <p>Le scadenze sono stimate dall'AI: correggile se sulla confezione c'è una data diversa.
+                        Togli la spunta ai prodotti che non vuoi aggiungere.</p>
+                </div>
+            </div>
+
+            <div class="flash flash-error" role="alert" th:unless="${#lists.isEmpty(problems)}">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+                <div>
+                    <strong>Controlla queste righe:</strong>
+                    <ul><li th:each="p : ${problems}" th:text="${p}">Problema</li></ul>
+                </div>
+            </div>
+
+            <form th:action="@{/receipt/import}" th:object="${importForm}" method="post">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th><span class="sr-only">Aggiungi</span></th>
+                            <th>Sullo scontrino</th>
+                            <th>Prodotto del catalogo</th>
+                            <th class="num">Pezzi</th>
+                            <th>Scadenza</th>
+                            <th>Dove</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="receipt-row" th:each="row, it : *{rows}">
+                            <td>
+                                <input type="checkbox" th:field="*{rows[__${it.index}__].include}"
+                                       th:title="'Aggiungi la riga ' + ${it.index + 1}" style="width:1.1rem;height:1.1rem;accent-color:var(--basil)">
+                            </td>
+                            <td>
+                                <span class="small" th:text="${row.receiptText}">2 X LATTE UHT</span>
+                                <input type="hidden" th:field="*{rows[__${it.index}__].receiptText}">
+                            </td>
+                            <td>
+                                <select class="input" th:field="*{rows[__${it.index}__].productId}"
+                                        th:classappend="${row.productId == null} ? 'is-invalid'">
+                                    <option value="">Non trovato: scegli</option>
+                                    <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.name}">Prodotto</option>
+                                </select>
+                            </td>
+                            <td class="num">
+                                <input class="input" type="number" min="1" max="999" style="width:4.5rem"
+                                       th:field="*{rows[__${it.index}__].quantity}">
+                            </td>
+                            <td>
+                                <input class="input" type="date" th:min="${today}"
+                                       th:field="*{rows[__${it.index}__].expirationDate}">
+                            </td>
+                            <td>
+                                <select class="input" th:field="*{rows[__${it.index}__].storage}">
+                                    <option th:each="s : ${storages}" th:value="${s}" th:text="${s.label}">Dispensa</option>
+                                </select>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-actions">
+                    <button class="btn" type="submit">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-check"/></svg> Aggiungi alla dispensa
+                    </button>
+                    <a class="btn btn-ghost" th:href="@{/receipt}">Ricomincia</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

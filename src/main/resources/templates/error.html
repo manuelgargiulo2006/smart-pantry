@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Errore')}"></head>
+<body>
+<div class="error-page">
+    <div>
+        <div class="code" th:text="${status}">404</div>
+        <h1 th:text="${status == 404} ? 'Pagina non trovata' : (${status == 403} ? 'Accesso non consentito' : 'Qualcosa è andato storto')">Pagina non trovata</h1>
+        <p th:if="${status == 404}">La pagina o l'elemento che cerchi non esiste, oppure appartiene a un altro utente.</p>
+        <p th:if="${status == 403}">Questa sezione è riservata agli amministratori.</p>
+        <p th:if="${status != 404 and status != 403}">Si è verificato un errore imprevisto. Riprova tra qualche istante.</p>
+        <a class="btn" th:href="@{/}">Torna alla home</a>
+    </div>
+</div>
+</body>
+</html>

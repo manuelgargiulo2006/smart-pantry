@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Profilo')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container" style="max-width:900px">
+            <div class="page-head">
+                <div>
+                    <h1>Profilo e allergie</h1>
+                    <p>Allergie e regime alimentare vengono usati per escludere le ricette non adatte
+                        e per dare istruzioni all'intelligenza artificiale.</p>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <form class="panel" th:action="@{/profile}" th:object="${profileForm}" method="post" novalidate>
+                <div class="panel-head">
+                    <h2>I tuoi dati</h2>
+                    <span class="muted small" th:text="'Iscritto dal ' + ${#temporals.format(user.createdAt, 'd MMMM yyyy')}">Iscritto dal</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <span class="label">Nome utente</span>
+                        <input class="input" type="text" th:value="${user.username}" disabled>
+                    </div>
+                    <div class="field">
+                        <label for="email">Email</label>
+                        <input class="input" id="email" type="email" th:field="*{email}"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                    </div>
+
+                    <fieldset class="field full" style="border:0;padding:0;margin:0">
+                        <legend class="label" style="margin-bottom:.4rem">Regime alimentare</legend>
+                        <div class="radios">
+                            <label class="check" th:each="d : ${diets}">
+                                <input type="radio" th:field="*{diet}" th:value="${d}">
+                                <span th:text="${d.label}">Onnivora</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="field full" style="border:0;padding:0;margin:0">
+                        <legend class="label" style="margin-bottom:.2rem">Allergie e intolleranze</legend>
+                        <span class="hint" style="margin-bottom:.5rem">I 14 allergeni che per legge vanno indicati sulle etichette.</span>
+                        <div class="checks">
+                            <label class="check" th:each="a : ${allergens}">
+                                <input type="checkbox" th:field="*{allergens}" th:value="${a}">
+                                <span th:text="${a.label}">Glutine</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div class="field full">
+                        <label for="foodPreferences">Altre preferenze <span class="muted">(facoltativo)</span></label>
+                        <textarea class="input" id="foodPreferences" th:field="*{foodPreferences}" maxlength="500"
+                                  style="min-height:5rem;font-family:inherit;font-size:1rem"
+                                  placeholder="Es. piatti veloci, niente piccante, poco sale"></textarea>
+                        <span class="field-error" th:if="${#fields.hasErrors('foodPreferences')}" th:errors="*{foodPreferences}"></span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn" type="submit">Salva il profilo</button>
+                </div>
+            </form>
+
+            <form class="panel" th:action="@{/profile/password}" th:object="${passwordForm}" method="post" novalidate>
+                <h2 style="margin-bottom:1rem">Cambia password</h2>
+                <div class="flash flash-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+                    <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">Errore</span>
+                </div>
+                <div class="form-grid">
+                    <div class="field full" style="max-width:24rem">
+                        <label for="currentPassword">Password attuale</label>
+                        <input class="input" id="currentPassword" type="password" th:field="*{currentPassword}"
+                               autocomplete="current-password">
+                        <span class="field-error" th:if="${#fields.hasErrors('currentPassword')}" th:errors="*{currentPassword}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="newPassword">Nuova password</label>
+                        <input class="input" id="newPassword" type="password" th:field="*{newPassword}" autocomplete="new-password">
+                        <span class="field-error" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="confirmPassword">Ripeti la nuova password</label>
+                        <input class="input" id="confirmPassword" type="password" th:field="*{confirmPassword}" autocomplete="new-password">
+                        <span class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-ghost" type="submit">Cambia password</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

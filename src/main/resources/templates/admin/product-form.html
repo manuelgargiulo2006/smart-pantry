@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${product == null} ? 'Nuovo prodotto' : 'Modifica prodotto')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container" style="max-width:860px">
+            <div class="page-head">
+                <div>
+                    <h1 th:text="${product == null} ? 'Nuovo prodotto' : 'Modifica ' + ${product.name}">Nuovo prodotto</h1>
+                </div>
+            </div>
+
+            <form class="panel" method="post" th:object="${form}" novalidate
+                  th:action="${product == null} ? @{/admin/products/new} : @{/admin/products/{id}/edit(id=${product.id})}">
+
+                <div class="flash flash-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+                    <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">Errore</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="name">Nome</label>
+                        <input class="input" id="name" type="text" maxlength="100" th:field="*{name}"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="categoryId">Categoria</label>
+                        <select class="input" id="categoryId" th:field="*{categoryId}"
+                                th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid'">
+                            <option value="">Scegli</option>
+                            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}">Categoria</option>
+                        </select>
+                        <span class="field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="barcode">Codice a barre <span class="muted">(facoltativo)</span></label>
+                        <input class="input" id="barcode" type="text" inputmode="numeric" maxlength="14" th:field="*{barcode}"
+                               th:classappend="${#fields.hasErrors('barcode')} ? 'is-invalid'">
+                        <span class="hint">EAN da 8 a 14 cifre. Lascialo vuoto per frutta, verdura e prodotti sfusi.</span>
+                        <span class="field-error" th:if="${#fields.hasErrors('barcode')}" th:errors="*{barcode}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="shelfLifeDays">Durata media in giorni <span class="muted">(facoltativa)</span></label>
+                        <input class="input" id="shelfLifeDays" type="number" min="1" max="3650" th:field="*{shelfLifeDays}"
+                               th:classappend="${#fields.hasErrors('shelfLifeDays')} ? 'is-invalid'">
+                        <span class="hint">Serve a proporre in automatico la data di scadenza.</span>
+                        <span class="field-error" th:if="${#fields.hasErrors('shelfLifeDays')}" th:errors="*{shelfLifeDays}"></span>
+                    </div>
+                    <fieldset class="field full" style="border:0;padding:0;margin:0">
+                        <legend class="label" style="margin-bottom:.5rem">Allergeni contenuti</legend>
+                        <div class="checks">
+                            <label class="check" th:each="a : ${allergens}">
+                                <input type="checkbox" th:field="*{allergens}" th:value="${a}">
+                                <span th:text="${a.label}">Glutine</span>
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn" type="submit" th:text="${product == null} ? 'Aggiungi al catalogo' : 'Salva modifiche'">Salva</button>
+                    <a class="btn btn-ghost" th:href="@{/admin/products}">Annulla</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

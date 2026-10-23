@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${item == null} ? 'Aggiungi prodotto' : 'Modifica prodotto')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container" style="max-width:820px">
+            <div class="page-head">
+                <div>
+                    <h1 th:text="${item == null} ? 'Aggiungi alla dispensa' : 'Modifica ' + ${item.product.name}">Aggiungi alla dispensa</h1>
+                    <p th:if="${item == null}">Scegli il prodotto dal catalogo e indica quando scade.
+                        Per i prodotti freschi senza data puoi farla stimare all'AI.</p>
+                </div>
+            </div>
+
+            <form class="panel" method="post" th:object="${form}"
+                  th:action="${item == null} ? @{/pantry/new} : @{/pantry/{id}/edit(id=${item.id})}" novalidate>
+
+                <div class="flash flash-error" role="alert" th:if="${#fields.hasGlobalErrors()}">
+                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+                    <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">Errore</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field full" th:if="${item == null}">
+                        <label for="barcode">Codice a barre <span class="muted">(facoltativo)</span></label>
+                        <input class="input" id="barcode" type="text" inputmode="numeric" autocomplete="off"
+                               placeholder="Scrivi o scansiona il codice e premi Invio">
+                        <span id="barcode-msg" class="hint" aria-live="polite"></span>
+                    </div>
+
+                    <div class="field full">
+                        <label for="productId">Prodotto</label>
+                        <select class="input" id="productId" th:field="*{productId}"
+                                th:classappend="${#fields.hasErrors('productId')} ? 'is-invalid'">
+                            <option value="">Scegli dal catalogo</option>
+                            <optgroup th:each="c : ${categories}" th:label="${c.name}">
+                                <option th:each="p : ${products}" th:if="${p.category.id == c.id}"
+                                        th:value="${p.id}" th:text="${p.name}"
+                                        th:attr="data-shelf-life=${p.shelfLifeDays},data-barcode=${p.barcode}">Prodotto</option>
+                            </optgroup>
+                        </select>
+                        <span class="hint">Il prodotto non c'è? Chiedi all'amministratore di aggiungerlo al catalogo.</span>
+                        <span class="field-error" th:if="${#fields.hasErrors('productId')}" th:errors="*{productId}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="quantity">Quantità (pezzi o confezioni)</label>
+                        <input class="input" id="quantity" type="number" min="1" max="999" th:field="*{quantity}"
+                               th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid'">
+                        <span class="field-error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="storage">Dove lo conservi</label>
+                        <select class="input" id="storage" th:field="*{storage}">
+                            <option th:each="s : ${storages}" th:value="${s}" th:text="${s.label}">Frigorifero</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="purchaseDate">Data di acquisto</label>
+                        <input class="input" id="purchaseDate" type="date" th:field="*{purchaseDate}" th:max="${today}"
+                               th:classappend="${#fields.hasErrors('purchaseDate')} ? 'is-invalid'">
+                        <span class="field-error" th:if="${#fields.hasErrors('purchaseDate')}" th:errors="*{purchaseDate}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="expirationDate">Data di scadenza</label>
+                        <div class="input-with-action">
+                            <input class="input" id="expirationDate" type="date" th:field="*{expirationDate}"
+                                   th:classappend="${#fields.hasErrors('expirationDate')} ? 'is-invalid'">
+                        </div>
+                        <span class="field-error" th:if="${#fields.hasErrors('expirationDate')}" th:errors="*{expirationDate}"></span>
+                        <button class="btn btn-ghost btn-small" type="button" id="estimate-btn"
+                                th:data-url="@{/pantry/estimate}" style="align-self:flex-start">
+                            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Stima con AI
+                        </button>
+                        <div class="estimate-box" id="estimate-box" aria-live="polite"></div>
+                    </div>
+
+                    <div class="field full">
+                        <label for="minQuantity">Soglia minima <span class="muted">(facoltativa)</span></label>
+                        <input class="input" id="minQuantity" type="number" min="1" max="999" th:field="*{minQuantity}"
+                               style="max-width:12rem"
+                               th:classappend="${#fields.hasErrors('minQuantity')} ? 'is-invalid'">
+                        <span class="hint">Quando in dispensa ne restano meno di questo numero, il prodotto
+                            viene aggiunto da solo alla lista della spesa.</span>
+                        <span class="field-error" th:if="${#fields.hasErrors('minQuantity')}" th:errors="*{minQuantity}"></span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn" type="submit" th:text="${item == null} ? 'Aggiungi alla dispensa' : 'Salva modifiche'">Salva</button>
+                    <a class="btn btn-ghost" th:href="@{/pantry}">Annulla</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

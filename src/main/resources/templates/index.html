@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Benvenuto')}"></head>
+<body>
+<div class="public">
+    <section class="public-side">
+        <a class="brand" th:href="@{/}">
+            <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-jar"/></svg></span>
+            Smart Pantry
+        </a>
+        <div>
+            <h1>Niente più cibo dimenticato in fondo al frigo.</h1>
+            <p class="lead">Tieni traccia di quello che hai in casa, scopri cosa sta per scadere
+                e cucina prima di buttare via qualcosa.</p>
+        </div>
+        <div class="shelf" aria-hidden="true">
+            <div class="shelf-item">Latte intero
+                <span class="expiry expired"><span class="days">Scaduto</span><span class="date">ieri</span></span>
+            </div>
+            <div class="shelf-item">Zucchine
+                <span class="expiry expiring"><span class="days">Domani</span><span class="date">tra 1 giorno</span></span>
+            </div>
+            <div class="shelf-item">Passata di pomodoro
+                <span class="expiry ok"><span class="days">200 gg</span><span class="date">a posto</span></span>
+            </div>
+        </div>
+    </section>
+
+    <main class="public-main">
+        <div class="auth-card">
+            <h2>La tua dispensa, sotto controllo</h2>
+            <p class="sub">Un posto solo per scorte, scadenze, spesa e ricette.</p>
+
+            <div class="features">
+                <div class="feature">
+                    <span class="icon-wrap"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg></span>
+                    <div>
+                        <h3>Avvisi di scadenza</h3>
+                        <p>In rosso quello che è scaduto, in arancione quello che scade entro 3 giorni.</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <span class="icon-wrap"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-cart"/></svg></span>
+                    <div>
+                        <h3>Spesa che si scrive da sola</h3>
+                        <p>Quando un prodotto scende sotto la tua soglia, finisce in lista.</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <span class="icon-wrap"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg></span>
+                    <div>
+                        <h3>Ricette con l'intelligenza artificiale</h3>
+                        <p>Scegli gli ingredienti in scadenza e ricevi una ricetta per usarli.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a class="btn" th:href="@{/login}">Accedi</a>
+                <a class="btn btn-ghost" th:href="@{/register}">Crea un account</a>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Accedi')}"></head>
+<body>
+<div class="public">
+    <section class="public-side">
+        <a class="brand" th:href="@{/}">
+            <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-jar"/></svg></span>
+            Smart Pantry
+        </a>
+        <div>
+            <h1>Bentornato in dispensa.</h1>
+            <p class="lead">Controlla cosa sta per scadere prima di andare a fare la spesa.</p>
+        </div>
+        <div></div>
+    </section>
+
+    <main class="public-main">
+        <div class="auth-card">
+            <h2>Accedi</h2>
+            <p class="sub">Inserisci nome utente e password.</p>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+            <div class="flash flash-error" role="alert" th:if="${param.error}">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+                <span>Nome utente o password non corretti.</span>
+            </div>
+            <div class="flash flash-success" role="status" th:if="${param.logout}">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-check"/></svg>
+                <span>Sei uscito dal tuo account.</span>
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="field">
+                    <label for="username">Nome utente</label>
+                    <input class="input" id="username" name="username" type="text" autocomplete="username" required autofocus>
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-block" type="submit">Accedi</button>
+                </div>
+            </form>
+
+            <p class="switch">Non hai un account? <a th:href="@{/register}">Registrati</a></p>
+
+            <div class="demo-box">
+                Account di prova: <code>demo</code> / <code>demo1234</code> (utente con dispensa già pronta)
+                oppure <code>admin</code> / <code>admin1234</code> (amministratore).
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

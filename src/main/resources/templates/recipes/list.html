@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ricette')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <h1>Ricette</h1>
+                    <p>Le ricette del database incrociate con la tua dispensa: in alto quelle che
+                        usano i prodotti in scadenza.</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-accent" th:href="@{/recipes/ai}">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Crea una ricetta con l'AI
+                    </a>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <!-- Suggerimenti anti-spreco -->
+            <section class="section">
+                <div class="panel-head">
+                    <h2>Per non sprecare</h2>
+                    <div class="chips" th:unless="${#lists.isEmpty(expiring)}">
+                        <span class="muted small">In scadenza:</span>
+                        <span class="chip orange" th:each="e : ${expiring}" th:text="${e.product.name}">Zucchine</span>
+                    </div>
+                </div>
+
+                <div class="panel empty" th:if="${#lists.isEmpty(expiring)}">
+                    <h3>Niente in scadenza nei prossimi 3 giorni</h3>
+                    <p>Quando qualcosa starà per scadere troverai qui le ricette per usarlo.</p>
+                </div>
+                <div class="panel empty" th:if="${not #lists.isEmpty(expiring) and #lists.isEmpty(suggestions)}">
+                    <h3>Nessuna ricetta del database usa questi prodotti</h3>
+                    <p>Prova a farne inventare una all'intelligenza artificiale.</p>
+                    <a class="btn btn-accent" th:href="@{/recipes/ai}">Crea una ricetta con l'AI</a>
+                </div>
+
+                <div class="recipe-list" th:unless="${#lists.isEmpty(suggestions)}">
+                    <a class="recipe suggested" th:each="s : ${suggestions}" th:href="@{/recipes/{id}(id=${s.recipe.id})}">
+                        <h3 th:text="${s.recipe.name}">Frittata di zucchine</h3>
+                        <p class="uses">Usa <strong th:text="${#strings.listJoin(s.expiringUsed, ', ')}">zucchine, uova</strong></p>
+                        <p class="desc" th:text="${s.recipe.description}">Descrizione</p>
+                        <div class="facts">
+                            <span><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-clock"/></svg>
+                                <span th:text="${s.recipe.prepMinutes} + ' min'">20 min</span></span>
+                            <span><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-people"/></svg>
+                                <span th:text="${s.recipe.servings}">2</span></span>
+                            <span th:if="${#lists.isEmpty(s.missing)}" style="color:var(--leaf);font-weight:600">Hai tutti gli ingredienti</span>
+                            <span th:unless="${#lists.isEmpty(s.missing)}"
+                                  th:text="'Da comprare: ' + ${#strings.listJoin(s.missing, ', ')}">Da comprare: latte</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Ricettario completo -->
+            <section class="section" style="margin-top:2.25rem">
+                <div class="panel-head">
+                    <h2>Ricettario</h2>
+                </div>
+                <form class="filters" th:action="@{/recipes}" method="get" role="search">
+                    <div class="search">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-search"/></svg>
+                        <label class="sr-only" for="q">Cerca</label>
+                        <input class="input" id="q" type="search" name="q" th:value="${q}" placeholder="Cerca una ricetta">
+                    </div>
+                    <label class="sr-only" for="diet">Regime</label>
+                    <select class="input" id="diet" name="diet">
+                        <option value="">Tutti i regimi</option>
+                        <option th:each="d : ${diets}" th:value="${d}" th:text="${d.label}" th:selected="${d == diet}">Vegana</option>
+                    </select>
+                    <button class="btn btn-ghost" type="submit">Filtra</button>
+                </form>
+
+                <p class="muted" th:if="${#lists.isEmpty(recipes)}">Nessuna ricetta trovata.</p>
+                <div class="recipe-list" th:unless="${#lists.isEmpty(recipes)}">
+                    <a class="recipe" th:each="s : ${recipes}" th:href="@{/recipes/{id}(id=${s.recipe.id})}">
+                        <div class="chips">
+                            <span class="chip green" th:if="${s.recipe.diet.name() != 'ONNIVORA'}" th:text="${s.recipe.diet.label}">Vegana</span>
+                            <span class="chip dark" th:if="${s.recipe.aiGenerated}">Creata con AI</span>
+                            <span class="chip red" th:unless="${s.safe}"
+                                  th:text="'Contiene allergeni'">Contiene allergeni</span>
+                        </div>
+                        <h3 th:text="${s.recipe.name}">Pasta e ceci</h3>
+                        <p class="desc" th:text="${s.recipe.description}">Descrizione</p>
+                        <div class="facts">
+                            <span><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-clock"/></svg>
+                                <span th:text="${s.recipe.prepMinutes} + ' min'">30 min</span></span>
+                            <span th:text="${#lists.size(s.available)} + ' di ' + ${#lists.size(s.available) + #lists.size(s.missing)} + ' ingredienti in casa'">3 di 5 ingredienti in casa</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

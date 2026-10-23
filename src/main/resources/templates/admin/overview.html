@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Amministrazione')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <h1>Amministrazione</h1>
+                    <p>Gestisci il catalogo generale: le categorie e i prodotti che gli utenti possono
+                        aggiungere alla propria dispensa.</p>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="admin-cards">
+                <a class="admin-card" th:href="@{/admin/categories}">
+                    <span class="value" th:text="${categoryCount}">9</span>
+                    <span class="muted">categorie</span>
+                </a>
+                <a class="admin-card" th:href="@{/admin/products}">
+                    <span class="value" th:text="${productCount}">48</span>
+                    <span class="muted">prodotti nel catalogo</span>
+                </a>
+                <a class="admin-card" th:href="@{/admin/recipes}">
+                    <span class="value" th:text="${recipeCount}">15</span>
+                    <span class="muted">ricette nel database</span>
+                </a>
+                <div class="admin-card">
+                    <span class="value" th:text="${userCount}">1</span>
+                    <span class="muted">utenti registrati</span>
+                </div>
+            </div>
+
+            <div class="grid-2 section" style="margin-top:1.25rem">
+                <section class="panel">
+                    <h2 style="margin-bottom:.5rem">Nuovo prodotto</h2>
+                    <p class="muted" style="margin-bottom:1rem">Aggiungi un prodotto con codice a barre,
+                        durata media e allergeni.</p>
+                    <a class="btn" th:href="@{/admin/products/new}">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-plus"/></svg> Aggiungi prodotto
+                    </a>
+                </section>
+                <section class="panel">
+                    <h2 style="margin-bottom:.5rem">Nuova categoria</h2>
+                    <form class="add-row" th:action="@{/admin/categories}" method="post">
+                        <div class="field">
+                            <label for="name">Nome</label>
+                            <input class="input" id="name" name="name" type="text" maxlength="60" required
+                                   placeholder="Es. Prodotti da forno">
+                        </div>
+                        <button class="btn btn-ghost" type="submit">Crea</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <!-- Intestazione: saluto, situazione della dispensa e quota di cibo salvato -->
+            <section class="hero">
+                <div class="hero-text">
+                    <p class="hero-date" th:text="${#strings.capitalize(#temporals.format(#temporals.createToday(), 'EEEE d MMMM'))}">Giovedì 8 ottobre</p>
+                    <h1>Ciao <span sec:authentication="name">utente</span></h1>
+                    <p class="hero-summary" th:if="${#lists.isEmpty(data.expired) and #lists.isEmpty(data.expiring)}">
+                        La dispensa è in ordine: niente di scaduto e niente in scadenza nei prossimi 3 giorni.
+                    </p>
+                    <p class="hero-summary" th:unless="${#lists.isEmpty(data.expired) and #lists.isEmpty(data.expiring)}">
+                        <th:block th:if="${not #lists.isEmpty(data.expired)}">
+                            <strong th:text="${#lists.size(data.expired)} + (${#lists.size(data.expired) == 1} ? ' prodotto scaduto' : ' prodotti scaduti')">2 prodotti scaduti</strong>
+                            da controllare<th:block th:unless="${#lists.isEmpty(data.expiring)}"> e </th:block><th:block th:if="${#lists.isEmpty(data.expiring)}">.</th:block>
+                        </th:block>
+                        <th:block th:unless="${#lists.isEmpty(data.expiring)}">
+                            <strong th:text="${#lists.size(data.expiring)} + ' da consumare'">5 da consumare</strong>
+                            entro 3 giorni.
+                        </th:block>
+                    </p>
+                    <div class="hero-actions">
+                        <a class="btn btn-accent" th:href="@{/pantry/new}">
+                            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-plus"/></svg> Aggiungi prodotto
+                        </a>
+                        <a class="btn btn-hero" th:href="@{/receipt}">
+                            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-receipt"/></svg> Da scontrino
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-ring" role="img"
+                     th:style="'--p:' + ${data.savedPercent()}"
+                     th:aria-label="${data.savedPercent()} + '% del cibo consumato invece che buttato negli ultimi 30 giorni'">
+                    <div class="ring">
+                        <span class="ring-value" th:text="${data.savedPercent()} + '%'">86%</span>
+                        <span class="ring-label">cibo salvato</span>
+                    </div>
+                    <p class="ring-caption">
+                        <span th:text="${data.consumedLast30}">12</span> consumati,
+                        <span th:text="${data.wastedLast30}">2</span> buttati
+                        <br>negli ultimi 30 giorni
+                    </p>
+                </div>
+            </section>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <!-- Alert scadenze: rosso = scaduti, arancione = entro 3 giorni -->
+            <div class="alert-band">
+                <section class="alert-box expired" aria-labelledby="t-expired">
+                    <header>
+                        <span class="big" th:text="${#lists.size(data.expired)}">0</span>
+                        <h2 id="t-expired" th:text="${#lists.size(data.expired) == 1} ? 'prodotto scaduto' : 'prodotti scaduti'">prodotti scaduti</h2>
+                    </header>
+                    <p class="muted small" th:if="${#lists.isEmpty(data.expired)}">Nessun prodotto scaduto. Ottimo lavoro.</p>
+                    <ul class="alert-list" th:unless="${#lists.isEmpty(data.expired)}">
+                        <li th:each="item : ${data.expired}">
+                            <div>
+                                <div class="product-name" th:text="${item.product.name}">Latte</div>
+                                <div th:replace="~{fragments/layout :: expiry(${item})}"></div>
+                            </div>
+                            <div class="actions">
+                                <form th:action="@{/pantry/{id}/discard(id=${item.id})}" method="post">
+                                    <input type="hidden" name="amount" th:value="${item.quantity}">
+                                    <input type="hidden" name="back" value="/dashboard">
+                                    <button class="btn btn-danger btn-small" type="submit"
+                                            th:title="'Butta tutte le ' + ${item.quantity} + ' unità'">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-bin"/></svg> Butta
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="alert-box expiring" aria-labelledby="t-expiring">
+                    <header>
+                        <span class="big" th:text="${#lists.size(data.expiring)}">0</span>
+                        <h2 id="t-expiring">in scadenza entro 3 giorni</h2>
+                    </header>
+                    <p class="muted small" th:if="${#lists.isEmpty(data.expiring)}">Niente in scadenza nei prossimi 3 giorni.</p>
+                    <ul class="alert-list" th:unless="${#lists.isEmpty(data.expiring)}">
+                        <li th:each="item : ${data.expiring}">
+                            <div>
+                                <div class="product-name">
+                                    <span th:text="${item.product.name}">Zucchine</span>
+                                    <span class="muted small" th:text="'x' + ${item.quantity}">x3</span>
+                                </div>
+                                <div th:replace="~{fragments/layout :: expiry(${item})}"></div>
+                            </div>
+                            <div class="actions">
+                                <form th:action="@{/pantry/{id}/consume(id=${item.id})}" method="post">
+                                    <input type="hidden" name="amount" value="1">
+                                    <input type="hidden" name="back" value="/dashboard">
+                                    <button class="btn btn-ghost btn-small" type="submit" title="Segna 1 come consumato">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-check"/></svg> Consumato
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                    <a class="btn btn-accent btn-small" style="margin-top:.9rem" th:href="@{/recipes/ai}"
+                       th:unless="${#lists.isEmpty(data.expiring)}">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Cosa ci cucino?
+                    </a>
+                </section>
+            </div>
+
+            <!-- Prossimi 7 giorni -->
+            <section class="section">
+                <div class="panel-head">
+                    <h2>I prossimi 7 giorni</h2>
+                    <a th:href="@{/pantry}">Tutta la dispensa</a>
+                </div>
+                <div class="week-wrap">
+                    <div class="week">
+                        <div class="week-day" th:each="day, it : ${data.week}" th:classappend="${it.first} ? 'today'">
+                            <div class="wd" th:text="${it.first} ? 'oggi' : ${#temporals.format(day.date, 'EEE')}">lun</div>
+                            <div class="dn" th:text="${#temporals.format(day.date, 'd')}">12</div>
+                            <ul th:unless="${#lists.isEmpty(day.items)}">
+                                <li th:each="item : ${day.items}" th:classappend="${item.status.cssClass}"
+                                    th:text="${item.product.name}">Uova</li>
+                            </ul>
+                            <span class="none" th:if="${#lists.isEmpty(day.items)}">Nessuna scadenza</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid-main section">
+                <!-- Ricette suggerite -->
+                <section class="panel">
+                    <div class="panel-head">
+                        <h2>Da cucinare subito</h2>
+                        <a th:href="@{/recipes}">Tutte le ricette</a>
+                    </div>
+                    <p class="muted" th:if="${#lists.isEmpty(suggestions)}">
+                        Quando qualcosa starà per scadere ti suggeriremo qui le ricette per usarlo.
+                    </p>
+                    <div class="stack" th:unless="${#lists.isEmpty(suggestions)}">
+                        <a class="recipe suggested" th:each="s : ${suggestions}" th:href="@{/recipes/{id}(id=${s.recipe.id})}">
+                            <h3 th:text="${s.recipe.name}">Frittata</h3>
+                            <p class="uses">Usa <strong th:text="${#strings.listJoin(s.expiringUsed, ', ')}">zucchine, uova</strong></p>
+                            <div class="facts">
+                                <span><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-clock"/></svg>
+                                    <span th:text="${s.recipe.prepMinutes} + ' min'">20 min</span></span>
+                                <span th:text="${#lists.isEmpty(s.missing)} ? 'Hai tutto' : 'Mancano ' + ${#lists.size(s.missing)}">Hai tutto</span>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Statistiche anti-spreco -->
+                <section class="panel">
+                    <div class="panel-head">
+                        <h2>Ultimi 30 giorni</h2>
+                    </div>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="value" th:text="${data.consumedLast30}">12</div>
+                            <div class="label">consumati</div>
+                        </div>
+                        <div class="stat">
+                            <div class="value" th:text="${data.wastedLast30}">2</div>
+                            <div class="label">buttati</div>
+                        </div>
+                        <div class="stat">
+                            <div class="value" th:text="${data.totalItems}">30</div>
+                            <div class="label">pezzi in dispensa</div>
+                        </div>
+                        <div class="stat">
+                            <div class="value" th:text="${data.shoppingCount}">3</div>
+                            <div class="label">da comprare</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:1.1rem">
+                        <div class="small"><strong th:text="${data.savedPercent()} + '%'">86%</strong>
+                            <span class="muted">del cibo è stato consumato invece che buttato</span></div>
+                        <div class="meter" role="img" th:aria-label="${data.savedPercent()} + '% consumato'">
+                            <span th:style="'width:' + ${data.savedPercent()} + '%'"></span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin:1.4rem 0 .5rem">Attività recenti</h3>
+                    <p class="muted small" th:if="${#lists.isEmpty(data.recentMovements)}">Nessun movimento registrato.</p>
+                    <ul class="activity" th:unless="${#lists.isEmpty(data.recentMovements)}">
+                        <li th:each="m : ${data.recentMovements}">
+                            <span>
+                                <span class="chip"
+                                      th:classappend="${m.type.name() == 'BUTTATO'} ? 'red' : (${m.type.name() == 'ACQUISTATO'} ? 'green' : '')"
+                                      th:text="${m.type.label}">Consumato</span>
+                                <span th:text="${m.product.name} + ' x' + ${m.quantity}">Latte x1</span>
+                            </span>
+                            <span class="muted nowrap" th:text="${#temporals.format(m.createdAt, 'd MMM')}">3 ott</span>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

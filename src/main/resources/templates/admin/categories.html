@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Categorie')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container" style="max-width:860px">
+            <div class="page-head">
+                <div>
+                    <h1>Categorie</h1>
+                    <p>Una categoria si può eliminare solo quando non contiene più prodotti.</p>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <section class="panel" style="margin-bottom:1.25rem">
+                <form class="add-row" th:action="@{/admin/categories}" method="post">
+                    <div class="field">
+                        <label for="new-name">Nuova categoria</label>
+                        <input class="input" id="new-name" name="name" type="text" maxlength="60" required
+                               placeholder="Es. Prodotti da forno">
+                    </div>
+                    <button class="btn" type="submit">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-plus"/></svg> Crea
+                    </button>
+                </form>
+            </section>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th class="num">Prodotti</th>
+                        <th class="num"><span class="sr-only">Azioni</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${categories}">
+                        <td>
+                            <form class="rename-form" th:action="@{/admin/categories/{id}(id=${entry.key.id})}" method="post">
+                                <label class="sr-only" th:for="'cat-' + ${entry.key.id}">Nome</label>
+                                <input class="input" th:id="'cat-' + ${entry.key.id}" name="name" type="text"
+                                       maxlength="60" required th:value="${entry.key.name}">
+                                <button class="btn btn-ghost btn-small" type="submit">Rinomina</button>
+                            </form>
+                        </td>
+                        <td class="num">
+                            <a th:href="@{/admin/products(categoryId=${entry.key.id})}" th:text="${entry.value}">6</a>
+                        </td>
+                        <td class="num">
+                            <form method="post" th:action="@{/admin/categories/{id}/delete(id=${entry.key.id})}"
+                                  th:data-confirm="'Eliminare la categoria ' + ${entry.key.name} + '?'">
+                                <button class="icon-btn danger" type="submit" title="Elimina"
+                                        th:disabled="${entry.value > 0}">
+                                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-trash"/></svg>
+                                    <span class="sr-only">Elimina</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

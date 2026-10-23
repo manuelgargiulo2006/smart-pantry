@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ricettario')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <h1>Ricettario</h1>
+                    <p>Tutte le ricette del database, comprese quelle create con l'AI e salvate dagli utenti.</p>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Ricetta</th>
+                        <th>Regime</th>
+                        <th class="num">Ingredienti</th>
+                        <th class="num hide-sm">Minuti</th>
+                        <th>Origine</th>
+                        <th class="num"><span class="sr-only">Azioni</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${recipes}">
+                        <td><a class="product-name" th:href="@{/recipes/{id}(id=${r.id})}" th:text="${r.name}">Caprese</a></td>
+                        <td th:text="${r.diet.label}">Vegetariana</td>
+                        <td class="num" th:text="${#lists.size(r.ingredients)}">4</td>
+                        <td class="num hide-sm" th:text="${r.prepMinutes}">10</td>
+                        <td>
+                            <span class="chip dark" th:if="${r.aiGenerated}">Creata con AI</span>
+                            <span class="chip" th:unless="${r.aiGenerated}">Database iniziale</span>
+                        </td>
+                        <td class="num">
+                            <form method="post" th:action="@{/admin/recipes/{id}/delete(id=${r.id})}"
+                                  th:data-confirm="'Eliminare la ricetta ' + ${r.name} + '?'">
+                                <button class="icon-btn danger" type="submit" title="Elimina">
+                                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-trash"/></svg>
+                                    <span class="sr-only">Elimina</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+target/
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Segreti e file locali
+.env
+*.env
+*.log
+HELP.md
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- Frammenti riutilizzati da tutte le pagine -->
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | Smart Pantry'">Smart Pantry</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- applica subito il tema chiaro/scuro scelto, prima di disegnare la pagina -->
+    <script>
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem("sp-theme"); } catch (e) {}
+            if (!theme) {
+                theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            }
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+
+<body>
+
+<!-- barra superiore, visibile solo su smartphone -->
+<header th:fragment="topbar" class="topbar">
+    <a class="brand" th:href="@{/dashboard}">
+        <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-jar"/></svg></span>
+        Smart Pantry
+    </a>
+    <button class="menu-toggle" type="button" aria-controls="sidebar" aria-expanded="false">
+        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-menu"/></svg>
+        <span class="sr-only">Apri il menu</span>
+    </button>
+</header>
+
+<!-- menu laterale -->
+<aside th:fragment="sidebar" class="sidebar" id="sidebar">
+    <a class="brand" th:href="@{/dashboard}">
+        <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-jar"/></svg></span>
+        Smart Pantry
+    </a>
+
+    <nav class="nav" aria-label="Menu principale">
+        <a th:href="@{/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-home"/></svg> Dashboard
+        </a>
+        <a th:href="@{/pantry}" th:classappend="${active == 'pantry'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-jar"/></svg> Dispensa
+            <span class="count" th:if="${navAlerts != null and navAlerts > 0}" th:text="${navAlerts}"
+                  th:title="${navAlerts} + ' prodotti scaduti o in scadenza'">2</span>
+        </a>
+        <a th:href="@{/shopping}" th:classappend="${active == 'shopping'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-cart"/></svg> Lista della spesa
+            <span class="count quiet" th:if="${navShopping != null and navShopping > 0}" th:text="${navShopping}">3</span>
+        </a>
+        <a th:href="@{/recipes}" th:classappend="${active == 'recipes'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-pot"/></svg> Ricette
+        </a>
+
+        <span class="nav-group">Intelligenza artificiale</span>
+        <a th:href="@{/recipes/ai}" th:classappend="${active == 'ai-recipe'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Ricetta anti-spreco
+        </a>
+        <a th:href="@{/receipt}" th:classappend="${active == 'receipt'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-receipt"/></svg> Leggi scontrino
+        </a>
+
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <span class="nav-group">Amministrazione</span>
+            <a th:href="@{/admin}" th:classappend="${active == 'admin'} ? 'active'">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-shield"/></svg> Panoramica
+            </a>
+            <a th:href="@{/admin/categories}" th:classappend="${active == 'admin-categories'} ? 'active'">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-tag"/></svg> Categorie
+            </a>
+            <a th:href="@{/admin/products}" th:classappend="${active == 'admin-products'} ? 'active'">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-jar"/></svg> Catalogo prodotti
+            </a>
+            <a th:href="@{/admin/recipes}" th:classappend="${active == 'admin-recipes'} ? 'active'">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-book"/></svg> Ricettario
+            </a>
+        </th:block>
+
+        <span class="nav-group">Account</span>
+        <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">
+            <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-user"/></svg> Profilo e allergie
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <span class="avatar" aria-hidden="true"
+                  th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 1))}">D</span>
+            <div>
+                <div class="who" sec:authentication="name">utente</div>
+                <div class="role" sec:authorize="hasRole('ADMIN')">Amministratore</div>
+                <div class="role" sec:authorize="!hasRole('ADMIN')">Utente</div>
+            </div>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <button class="logout" type="submit">
+                <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-logout"/></svg> Esci
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- messaggi di conferma o di errore -->
+<th:block th:fragment="flash">
+    <div class="flash flash-success" role="status" th:if="${success}">
+        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-check"/></svg>
+        <span th:text="${success}">Operazione completata</span>
+    </div>
+    <div class="flash flash-error" role="alert" th:if="${error}">
+        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-alert"/></svg>
+        <span th:text="${error}">Errore</span>
+    </div>
+</th:block>
+
+<!-- etichetta di scadenza: giorni rimasti + data -->
+<span th:fragment="expiry(item)" class="expiry" th:classappend="${item.status.cssClass}"
+      th:title="${item.daysLeft < 0 ? 'Scaduto da ' + (-item.daysLeft) + (item.daysLeft == -1 ? ' giorno' : ' giorni') : item.status.label}">
+    <span class="days"
+          th:text="${item.daysLeft < 0 ? 'Scaduto' : (item.daysLeft == 0 ? 'Oggi' : (item.daysLeft == 1 ? 'Domani' : item.daysLeft + ' gg'))}">3 gg</span>
+    <span class="date" th:text="${#temporals.format(item.expirationDate, 'd MMM yyyy')}">12 ott 2026</span>
+</span>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Leggi scontrino')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container" style="max-width:860px">
+            <div class="page-head">
+                <div>
+                    <span class="ai-badge"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Intelligenza artificiale</span>
+                    <h1 style="margin-top:.6rem">Leggi uno scontrino</h1>
+                    <p>Incolla il testo dello scontrino (ad esempio copiato da un'app di scansione o dallo
+                        scontrino digitale). L'AI riconosce i prodotti e le quantità: prima di aggiungerli
+                        alla dispensa potrai controllarli uno per uno.</p>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <form class="panel ai-form" th:action="@{/receipt/analyze}" th:object="${receiptForm}" method="post" novalidate>
+                <div class="field">
+                    <label for="text">Testo dello scontrino</label>
+                    <textarea class="input" id="text" th:field="*{text}" maxlength="4000"
+                              th:classappend="${#fields.hasErrors('text')} ? 'is-invalid'"
+                              placeholder="SUPERMERCATO ROSSI&#10;2 X LATTE UHT PS 1L      2,98&#10;ZUCCHINE KG 0,650        1,62&#10;PASSATA POM 700G         0,89&#10;SHOPPER                  0,10&#10;TOTALE                   5,59"></textarea>
+                    <span class="field-error" th:if="${#fields.hasErrors('text')}" th:errors="*{text}"></span>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-accent" type="submit">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-spark"/></svg> Riconosci i prodotti
+                    </button>
+                    <span class="loading-note"><span class="spinner"></span> Lettura dello scontrino in corso...</span>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

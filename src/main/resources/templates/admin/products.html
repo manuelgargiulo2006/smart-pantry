@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Catalogo prodotti')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <h1>Catalogo prodotti</h1>
+                    <p>Il catalogo generale da cui gli utenti scelgono i prodotti della loro dispensa.</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn" th:href="@{/admin/products/new}">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-plus"/></svg> Aggiungi prodotto
+                    </a>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <form class="filters" th:action="@{/admin/products}" method="get" role="search">
+                <div class="search">
+                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-search"/></svg>
+                    <label class="sr-only" for="q">Cerca</label>
+                    <input class="input" id="q" type="search" name="q" th:value="${q}" placeholder="Nome o codice a barre">
+                </div>
+                <label class="sr-only" for="categoryId">Categoria</label>
+                <select class="input" id="categoryId" name="categoryId">
+                    <option value="">Tutte le categorie</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                            th:selected="${c.id == categoryId}">Categoria</option>
+                </select>
+                <button class="btn btn-ghost" type="submit">Filtra</button>
+            </form>
+
+            <div class="table-wrap" th:unless="${#lists.isEmpty(products)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Prodotto</th>
+                        <th>Categoria</th>
+                        <th class="hide-sm">Codice a barre</th>
+                        <th class="num">Durata</th>
+                        <th class="hide-sm">Allergeni</th>
+                        <th class="num"><span class="sr-only">Azioni</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${products}">
+                        <td class="product-name" th:text="${p.name}">Latte intero</td>
+                        <td th:text="${p.category.name}">Latticini</td>
+                        <td class="hide-sm muted" th:text="${p.barcode != null} ? ${p.barcode} : '-'">800123</td>
+                        <td class="num nowrap" th:text="${p.shelfLifeDays != null} ? ${p.shelfLifeDays} + ' gg' : '-'">7 gg</td>
+                        <td class="hide-sm">
+                            <div class="chips">
+                                <span class="chip red" th:each="a : ${p.allergens}" th:text="${a.label}">Latte</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="icon-btn" th:href="@{/admin/products/{id}/edit(id=${p.id})}" title="Modifica">
+                                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-edit"/></svg>
+                                    <span class="sr-only">Modifica</span>
+                                </a>
+                                <form method="post" th:action="@{/admin/products/{id}/delete(id=${p.id})}"
+                                      th:data-confirm="'Eliminare ' + ${p.name} + ' dal catalogo?'">
+                                    <button class="icon-btn danger" type="submit" title="Elimina">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-trash"/></svg>
+                                        <span class="sr-only">Elimina</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel empty" th:if="${#lists.isEmpty(products)}">
+                <h3>Nessun prodotto trovato</h3>
+                <a class="btn" th:href="@{/admin/products/new}">Aggiungi prodotto</a>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

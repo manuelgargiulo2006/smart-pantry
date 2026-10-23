@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dispensa')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="main">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <h1>La mia dispensa</h1>
+                    <p>Ordinata per scadenza: in alto quello da consumare per primo.
+                        Usa <strong>Consumato</strong>, <strong>Buttato</strong> o <strong>+</strong> per aggiornare le scorte.</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn" th:href="@{/pantry/new}">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-plus"/></svg> Aggiungi prodotto
+                    </a>
+                    <a class="btn btn-ghost" th:href="@{/receipt}">
+                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-receipt"/></svg> Da scontrino
+                    </a>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <form class="filters" th:action="@{/pantry}" method="get" role="search">
+                <div class="search">
+                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-search"/></svg>
+                    <label class="sr-only" for="q">Cerca</label>
+                    <input class="input" id="q" type="search" name="q" th:value="${q}" placeholder="Cerca un prodotto">
+                </div>
+                <label class="sr-only" for="categoryId">Categoria</label>
+                <select class="input" id="categoryId" name="categoryId">
+                    <option value="">Tutte le categorie</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                            th:selected="${c.id == categoryId}">Categoria</option>
+                </select>
+                <label class="sr-only" for="status">Stato</label>
+                <select class="input" id="status" name="status">
+                    <option value="">Tutti gli stati</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}"
+                            th:selected="${s == status}">Stato</option>
+                </select>
+                <button class="btn btn-ghost" type="submit">Filtra</button>
+                <a class="small" th:href="@{/pantry}" th:if="${q != null or categoryId != null or status != null}">Azzera filtri</a>
+            </form>
+
+            <div class="table-wrap" th:unless="${#lists.isEmpty(items)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Prodotto</th>
+                        <th class="num">Quantità</th>
+                        <th>Scadenza</th>
+                        <th class="hide-sm">Acquistato</th>
+                        <th class="num">Aggiorna scorte</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${items}"
+                        th:classappend="${item.status.name() == 'SCADUTO'} ? 'row-expired' : (${item.status.name() == 'IN_SCADENZA'} ? 'row-expiring' : '')">
+                        <td>
+                            <div class="product-name" th:text="${item.product.name}">Zucchine</div>
+                            <div class="product-meta">
+                                <span th:text="${item.product.category.name}">Frutta e verdura</span>,
+                                <span th:text="${#strings.toLowerCase(item.storage.label)}">frigorifero</span>
+                            </div>
+                        </td>
+                        <td class="num"><span class="qty" th:text="${item.quantity}">3</span></td>
+                        <td><span th:replace="~{fragments/layout :: expiry(${item})}"></span></td>
+                        <td class="hide-sm muted" th:text="${#temporals.format(item.purchaseDate, 'd MMM yyyy')}">1 ott 2026</td>
+                        <td>
+                            <div class="row-actions">
+                                <form class="qty-form" method="post" th:action="@{/pantry/{id}/consume(id=${item.id})}">
+                                    <label class="sr-only" th:for="'amount-' + ${item.id}">Quantità</label>
+                                    <input class="input" type="number" name="amount" value="1" min="1" max="999"
+                                           th:id="'amount-' + ${item.id}">
+                                    <button class="btn btn-ghost btn-small" type="submit" title="Consumato">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-check"/></svg>
+                                        <span class="hide-sm">Consumato</span>
+                                    </button>
+                                    <button class="icon-btn warn" type="submit" title="Buttato (conta come spreco)"
+                                            th:formaction="@{/pantry/{id}/discard(id=${item.id})}">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-bin"/></svg>
+                                        <span class="sr-only">Buttato</span>
+                                    </button>
+                                    <button class="icon-btn" type="submit" title="Acquistato: aggiungi alla quantità"
+                                            th:formaction="@{/pantry/{id}/increase(id=${item.id})}">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-plus"/></svg>
+                                        <span class="sr-only">Acquistato</span>
+                                    </button>
+                                </form>
+                                <a class="icon-btn" th:href="@{/pantry/{id}/edit(id=${item.id})}" title="Modifica">
+                                    <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-edit"/></svg>
+                                    <span class="sr-only">Modifica</span>
+                                </a>
+                                <form class="inline" method="post" th:action="@{/pantry/{id}/delete(id=${item.id})}"
+                                      th:data-confirm="'Eliminare ' + ${item.product.name} + ' dalla dispensa? Non verrà conteggiato né come consumato né come buttato.'">
+                                    <button class="icon-btn danger" type="submit" title="Elimina (inserito per errore)">
+                                        <svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-trash"/></svg>
+                                        <span class="sr-only">Elimina</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel empty" th:if="${#lists.isEmpty(items) and totalCount == 0}">
+                <h3>La dispensa è vuota</h3>
+                <p>Aggiungi il primo prodotto a mano oppure incolla il testo di uno scontrino.</p>
+                <a class="btn" th:href="@{/pantry/new}">Aggiungi prodotto</a>
+            </div>
+            <div class="panel empty" th:if="${#lists.isEmpty(items) and totalCount > 0}">
+                <h3>Nessun prodotto corrisponde ai filtri</h3>
+                <a class="btn btn-ghost" th:href="@{/pantry}">Azzera filtri</a>
+            </div>
+
+            <p class="small muted" style="margin-top:1rem" th:unless="${#lists.isEmpty(items)}">
+                <span class="status-dot expired"></span>Scaduto
+                &nbsp; <span class="status-dot expiring"></span>Scade entro 3 giorni
+                &nbsp; <span class="status-dot ok"></span>A posto
+            </p>
+        </div>
+    </main>
+</div>
+</body>
+</html>
